@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -31,13 +32,24 @@ public class WebSercurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.httpBasic();
         http.authorizeRequests().
-                mvcMatchers(HttpMethod.GET,"/api/coupon/{CODE:[A-Z]*$}").hasAnyRole("USER","ADMIN").
-                mvcMatchers(HttpMethod.POST,"/api/coupon/*").hasRole("ADMIN")
+                mvcMatchers(HttpMethod.GET,"/api/coupon/{CODE:[A-Z]*$}","/index","/couponresponse",
+                        "/web/showcoupon","allcouponsresponse","/web/getcoupon").hasAnyRole("USER","ADMIN").
+                         mvcMatchers(HttpMethod.POST,"/web/getcoupon").hasAnyRole("USER","ADMIN").
+                mvcMatchers(HttpMethod.GET,"/web/showcreatecoupon").hasRole("ADMIN").
+                mvcMatchers(HttpMethod.POST,"/api/coupon","/coupon","/web/save","",
+                        "/web/getcoupon").hasRole("ADMIN")
+                .mvcMatchers("/login","/","/showreg","/registerUser").permitAll()
                 .anyRequest().denyAll()
                 .and()
-                .csrf().disable();
+                .csrf().disable().
+                logout().logoutSuccessUrl("/").invalidateHttpSession(true);
     }
 }
